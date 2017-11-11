@@ -10,5 +10,6 @@ All commands are prefixed with `home_`.
 - `diff` - show differences between files in repository and home dir
 - `down` - copy files from repository to home dir
 - `ls` - list files stored in repository
+- `pull` - pull repository and run `down`
+- `push` - run `up`, commit and push repository
 - `up` - copy files from home dir to repository
-- `update` - pull repository and run `down`
