@@ -95,6 +95,7 @@ alias nt='nosetests -vv'
 alias wrk='workon'
 alias cdp='cdproject'
 alias unquarantine='sudo xattr -d -r com.apple.quarantine'
+alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 
 # Aliases (global)
 alias -g ...='../..'
