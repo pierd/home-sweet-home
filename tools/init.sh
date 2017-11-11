@@ -5,3 +5,6 @@ fi
 
 # Set up PATH
 export PATH="${HOME_SWEET_HOME}/bin":$PATH
+
+# Set up aliases
+alias home_cd="cd ${HOME_SWEET_HOME}"
