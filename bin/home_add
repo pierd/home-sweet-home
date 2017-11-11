@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if ! which realpath > /dev/null; then
+    echo "coreutils needed!"
+    exit 1
+fi
+
+ref_root="${HOME_SWEET_HOME}/homedir"
+find "$*" -type f | while read path; do
+    abs_path=$(realpath "$path")
+    rel_path="${abs_path#$HOME/}"
+    echo ${rel_path}
+    mkdir -p "${ref_root}/$(dirname "${rel_path}")"
+    cp -p "$HOME/${rel_path}" "${ref_root}/${rel_path}"
+done

@@ -1,0 +1,175 @@
+# when root compinit doesn't like functions added by Homebrew - remove them
+if [[ $UID -eq 0 ]]; then
+    fpath=("${(@)fpath:#/usr/local/share/zsh/site-functions}")
+fi
+
+# Path to your oh-my-zsh installation.
+export ZSH=~/.oh-my-zsh
+
+# Set name of the theme to load. Optionally, if you set this to "random"
+# it'll load a random theme each time that oh-my-zsh is loaded.
+# See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
+ZSH_THEME="pierd"
+
+# Uncomment the following line to use case-sensitive completion.
+CASE_SENSITIVE="true"
+
+# Uncomment the following line to use hyphen-insensitive completion. Case
+# sensitive completion must be off. _ and - will be interchangeable.
+# HYPHEN_INSENSITIVE="true"
+
+# Uncomment the following line to disable bi-weekly auto-update checks.
+# DISABLE_AUTO_UPDATE="true"
+
+# Uncomment the following line to change how often to auto-update (in days).
+# export UPDATE_ZSH_DAYS=13
+
+# Uncomment the following line to disable colors in ls.
+# DISABLE_LS_COLORS="true"
+
+# Uncomment the following line to disable auto-setting terminal title.
+# DISABLE_AUTO_TITLE="true"
+
+# Uncomment the following line to enable command auto-correction.
+# ENABLE_CORRECTION="true"
+
+# Uncomment the following line to display red dots whilst waiting for completion.
+# COMPLETION_WAITING_DOTS="true"
+
+# Uncomment the following line if you want to disable marking untracked files
+# under VCS as dirty. This makes repository status check for large repositories
+# much, much faster.
+DISABLE_UNTRACKED_FILES_DIRTY="true"
+
+# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
+# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
+# Example format: plugins=(rails git textmate ruby lighthouse)
+# Add wisely, as too many plugins slow down shell startup.
+plugins=(
+  git
+  virtualenv
+)
+
+source $ZSH/oh-my-zsh.sh
+
+# User configuration
+
+# You may need to manually set your language environment
+# export LANG=en_US.UTF-8
+
+setopt notify
+setopt extended_glob
+setopt autocd
+unsetopt beep
+autoload zmv
+
+# Key bindings
+bindkey -v
+bindkey '^[[3~' delete-char
+bindkey '^[OH' beginning-of-line
+bindkey '^[[H' beginning-of-line
+bindkey '^[OF' end-of-line
+bindkey '^[[F' end-of-line
+bindkey '^[[1;5D' backward-word
+bindkey '^[[1;5C' forward-word
+bindkey '^R' history-incremental-search-backward
+bindkey '^[[A' up-line-or-history
+bindkey '^[OA' up-line-or-history
+bindkey '^[[B' down-line-or-history
+bindkey '^[OB' down-line-or-history
+bindkey '^P' up-history
+bindkey '^N' down-history
+bindkey '^A' beginning-of-line
+bindkey '^E' end-of-line
+
+# Completion
+zstyle ':completion:*' glob 1
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' menu select=long-list select=1
+zstyle ':completion:*:*:kill:*' menu yes select
+zstyle ':completion:*:kill:*'   force-list always
+
+# Aliases
+alias ls='ls -FG'
+alias nt='nosetests -vv'
+alias wrk='workon'
+alias cdp='cdproject'
+alias unquarantine='sudo xattr -d -r com.apple.quarantine'
+
+# Aliases (global)
+alias -g ...='../..'
+alias -g ....='../../..'
+alias -g .....='../../../..'
+
+# Nice title
+case $TERM in (xterm*|rxvt)
+	precmd () { print -Pn "\e]0;%n@%m: %~\a" }
+	preexec () { print -Pn "\e]0;%n@%m: $1\a" }
+	;;
+esac
+
+# additional function
+if [[ -d ~/.zsh/func ]]; then
+    fpath=(~/.zsh/func $fpath)
+    typeset -U fpath
+fi
+
+
+# Global envs
+export PATH=~/bin:$PATH
+export EDITOR='vim'
+unset LESS      # oh-my-zsh fucks with my less - don't!
+
+
+# Google Cloud SDK
+if [[ -d ~/google-cloud-sdk ]]; then
+    source ~/google-cloud-sdk/path.zsh.inc
+    #source ~/google-cloud-sdk/completion.zsh.inc
+fi
+
+
+# Java + Maven + Android Dev + Java GAE
+export INST_DIR=~/inst
+export ANDROID_SDK_ROOT=~/.android-sdk
+export ANDROID_HOME=$ANDROID_SDK_ROOT
+export ANDROID_NDK_ROOT=$INST_DIR/android-ndk
+export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
+export ANDROID_NDK=$ANDROID_NDK_ROOT
+export M2_HOME=~/.m2
+export MAVEN_HOME=$M2_HOME
+export M2=$M2_HOME/bin
+export APPENGINE_HOME=~/appengine-java-sdk-1.9.38
+export PATH=$M2/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
+
+use_java() {
+    export JAVA_HOME=`/usr/libexec/java_home $*`
+    export PATH=$JAVA_HOME/bin:$PATH
+}
+use_java
+
+
+# Python
+export VIRTUALENV_DISTRIBUTE=true
+export WORKON_HOME=~/venvs
+source /usr/local/bin/virtualenvwrapper.sh
+
+
+# Homebrew
+if [[ -f ~/.homebrew_github_api_token ]]; then
+    export HOMEBREW_GITHUB_API_TOKEN="$(<~/.homebrew_github_api_token)"
+fi
+
+# Ruby
+if [[ -d ~/.rvm ]]; then
+    export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
+fi
+
+# Rust
+if [[ -d ~/.cargo ]]; then
+    source $HOME/.cargo/env
+fi
+
+# Home Sweet Home
+if [[ -d ~/.home-sweet-home ]]; then
+    source .home-sweet-home/tools/init.sh
+fi

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+shopt -s nullglob
+
+ref_root="${HOME_SWEET_HOME}/homedir"
+for path in "$ref_root"/.* "$ref_root"/*; do
+    if [ -f "$path" ]; then
+        rel_path="${path#${ref_root}/}"
+        if ! cmp "${ref_root}/${rel_path}" "$HOME/${rel_path}" > /dev/null; then
+            cp -p -i "${ref_root}/${rel_path}" "$HOME/${rel_path}"
+        fi
+    fi
+done
