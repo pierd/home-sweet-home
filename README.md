@@ -11,3 +11,4 @@ All commands are prefixed with `home_`.
 - `down` - copy files from repository to home dir
 - `ls` - list files stored in repository
 - `up` - copy files from home dir to repository
+- `update` - pull repository and run `down`

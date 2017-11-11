@@ -1,0 +1,10 @@
+#!/bin/bash
+
+STATUS=$(git -C "${HOME_SWEET_HOME}" status --porcelain 2> /dev/null | tail -n1)
+if [[ -n $STATUS ]]; then
+    echo "Home Sweet Home repo dirty - clean it first"
+    exit 1
+fi
+
+git -C "${HOME_SWEET_HOME}" pull
+"${HOME_SWEET_HOME}/bin/home_down"
