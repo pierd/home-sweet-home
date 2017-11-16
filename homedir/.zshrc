@@ -52,10 +52,10 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
-# User configuration
 
-# You may need to manually set your language environment
-# export LANG=en_US.UTF-8
+######################
+# User configuration #
+######################
 
 setopt notify
 setopt extended_glob
@@ -92,15 +92,19 @@ zstyle ':completion:*:kill:*'   force-list always
 # Aliases
 alias ls='ls -FG'
 alias nt='nosetests -vv'
-alias wrk='workon'
-alias cdp='cdproject'
 alias unquarantine='sudo xattr -d -r com.apple.quarantine'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
+alias algrep='alias | grep'
+
+alias wrk='workon'
+alias cdp='cdproject'
+alias edit-wrk='mvim $VIRTUAL_ENV/bin/post{,de}activate'
 
 # Aliases (global)
 alias -g ...='../..'
 alias -g ....='../../..'
 alias -g .....='../../../..'
+
 
 # Nice title
 case $TERM in (xterm*|rxvt)
@@ -108,6 +112,7 @@ case $TERM in (xterm*|rxvt)
 	preexec () { print -Pn "\e]0;%n@%m: $1\a" }
 	;;
 esac
+
 
 # additional function
 if [[ -d ~/.zsh/func ]]; then
@@ -118,8 +123,7 @@ fi
 
 # Global envs
 export PATH=~/bin:$PATH
-export EDITOR='vim'
-unset LESS      # oh-my-zsh fucks with my less - don't!
+export EDITOR='vim' # TODO: make it work for git and use mvim by default
 
 
 # Google Cloud SDK
@@ -173,4 +177,9 @@ fi
 # Home Sweet Home
 if [[ -d ~/.home-sweet-home ]]; then
     source .home-sweet-home/tools/init.sh
+fi
+
+# very local overrides
+if [[ -f ~/.zshrc.local ]]; then
+    source ~/.zshrc.local
 fi

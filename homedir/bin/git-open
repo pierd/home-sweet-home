@@ -1,4 +1,3 @@
 #!/bin/bash
 
-repo=$(git remote get-url origin | sed -e 's/.*github\.com.\(.*\)\.git/\1/')
-open "https://github.com/${repo}"
+open "$(git remote get-url origin | sed -e 's/^\(.*\)\.git/\1/')"
