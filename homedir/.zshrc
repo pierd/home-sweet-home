@@ -95,6 +95,7 @@ alias nt='nosetests -vv'
 alias unquarantine='sudo xattr -d -r com.apple.quarantine'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 alias algrep='alias | grep'
+alias unssh='ssh -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o StrictHostKeyChecking=no'
 
 alias wrk='workon'
 alias cdp='cdproject'
