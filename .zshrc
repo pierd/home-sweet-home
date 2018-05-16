@@ -176,7 +176,7 @@ fi
 
 # Home Sweet Home
 if [[ -d ~/.home-sweet-home ]]; then
-    source .home-sweet-home/tools/init.sh
+    source ~/.home-sweet-home/init.sh
 fi
 
 # very local overrides

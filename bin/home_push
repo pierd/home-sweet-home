@@ -1,3 +1,0 @@
-#!/bin/bash
-
-"${HOME_SWEET_HOME}/bin/home_up" && git -C "${HOME_SWEET_HOME}" commit && git -C "${HOME_SWEET_HOME}" push
