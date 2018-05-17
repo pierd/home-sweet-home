@@ -134,24 +134,20 @@ if [[ -d ~/google-cloud-sdk ]]; then
 fi
 
 
-# Java + Maven + Android Dev + Java GAE
-export INST_DIR=~/inst
-export ANDROID_SDK_ROOT=~/.android-sdk
-export ANDROID_HOME=$ANDROID_SDK_ROOT
-export ANDROID_NDK_ROOT=$INST_DIR/android-ndk
-export ANDROID_NDK_HOME=$ANDROID_NDK_ROOT
-export ANDROID_NDK=$ANDROID_NDK_ROOT
-export M2_HOME=~/.m2
-export MAVEN_HOME=$M2_HOME
-export M2=$M2_HOME/bin
-export APPENGINE_HOME=~/appengine-java-sdk-1.9.38
-export PATH=$M2/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-
+# Java + Android Dev + Java GAE
 use_java() {
-    export JAVA_HOME=`/usr/libexec/java_home $*`
+    export JAVA_HOME=$(/usr/libexec/java_home $*)
     export PATH=$JAVA_HOME/bin:$PATH
 }
 use_java
+
+export ANDROID_HOME=~/Library/Android/sdk
+export ANDROID_SDK=$ANDROID_HOME
+export ANDROID_SDK_ROOT=$ANDROID_SDK
+export ANDROID_NDK=$ANDROID_SDK/ndk-bundle
+export ANDROID_NDK_HOME=$ANDROID_NDK
+export APPENGINE_HOME=~/appengine-java-sdk-1.9.38
+export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK:$PATH
 
 
 # Python
@@ -177,7 +173,7 @@ fi
 
 # Home Sweet Home
 if [[ -d ~/.home-sweet-home ]]; then
-    source .home-sweet-home/tools/init.sh
+    source ~/.home-sweet-home/tools/init.sh
 fi
 
 # very local overrides
