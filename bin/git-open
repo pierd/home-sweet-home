@@ -1,0 +1,3 @@
+#!/bin/bash
+
+open "$(git remote get-url origin | sed -e 's/^\(.*\)\.git/\1/')"
