@@ -1,7 +1,0 @@
-#!/bin/bash
-
-ref_root="${HOME_SWEET_HOME}/homedir"
-find "${ref_root}" -type f | while read path; do
-    rel_path="${path#${ref_root}/}"
-    echo ${rel_path}
-done
