@@ -48,6 +48,7 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 plugins=(
   git
   virtualenv
+  rust
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -106,26 +107,14 @@ alias -g ...='../..'
 alias -g ....='../../..'
 alias -g .....='../../../..'
 
-
-# Nice title
-case $TERM in (xterm*|rxvt)
-	precmd () { print -Pn "\e]0;%n@%m: %~\a" }
-	preexec () { print -Pn "\e]0;%n@%m: $1\a" }
-	;;
-esac
-
-
 # additional function
 if [[ -d ~/.zsh/func ]]; then
     fpath=(~/.zsh/func $fpath)
     typeset -U fpath
 fi
 
-
 # Global envs
-export PATH=~/bin:$PATH
 export EDITOR='vim' # TODO: make it work for git and use mvim by default
-
 
 # Google Cloud SDK
 if [[ -d ~/google-cloud-sdk ]]; then
@@ -133,28 +122,30 @@ if [[ -d ~/google-cloud-sdk ]]; then
     #source ~/google-cloud-sdk/completion.zsh.inc
 fi
 
-
 # Java + Android Dev + Java GAE
 use_java() {
     export JAVA_HOME=$(/usr/libexec/java_home $*)
     export PATH=$JAVA_HOME/bin:$PATH
 }
 use_java
-
-export ANDROID_HOME=~/Library/Android/sdk
-export ANDROID_SDK=$ANDROID_HOME
-export ANDROID_SDK_ROOT=$ANDROID_SDK
-export ANDROID_NDK=$ANDROID_SDK/ndk-bundle
-export ANDROID_NDK_HOME=$ANDROID_NDK
-export APPENGINE_HOME=~/appengine-java-sdk-1.9.38
-export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK:$PATH
-
+if [[ -d ~/Library/Android/sdk ]]; then
+    export ANDROID_HOME=~/Library/Android/sdk
+    export ANDROID_SDK=$ANDROID_HOME
+    export ANDROID_SDK_ROOT=$ANDROID_SDK
+    export ANDROID_NDK=$ANDROID_SDK/ndk-bundle
+    export ANDROID_NDK_HOME=$ANDROID_NDK
+    export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK:$PATH
+fi
+if [[ -d ~/appengine-java-sdk-1.9.38 ]]; then
+    export APPENGINE_HOME=~/appengine-java-sdk-1.9.38
+fi
 
 # Python
-export VIRTUALENV_DISTRIBUTE=true
-export WORKON_HOME=~/venvs
-source /usr/local/bin/virtualenvwrapper.sh
-
+if [[ -f /usr/local/bin/virtualenvwrapper.sh ]]; then
+    export VIRTUALENV_DISTRIBUTE=true
+    export WORKON_HOME=~/venvs
+    source /usr/local/bin/virtualenvwrapper.sh
+fi
 
 # Homebrew
 if [[ -f ~/.homebrew_github_api_token ]]; then
@@ -175,6 +166,9 @@ fi
 if [[ -d ~/.home-sweet-home ]]; then
     source ~/.home-sweet-home/init.sh
 fi
+
+# Put ~/bin in very front of the PATH
+export PATH=~/bin:$PATH
 
 # very local overrides
 if [[ -f ~/.zshrc.local ]]; then
