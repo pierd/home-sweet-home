@@ -47,8 +47,9 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(
   git
-  virtualenv
   rust
+  virtualenv
+  virtualenvwrapper
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -138,13 +139,6 @@ if [[ -d ~/Library/Android/sdk ]]; then
 fi
 if [[ -d ~/appengine-java-sdk-1.9.38 ]]; then
     export APPENGINE_HOME=~/appengine-java-sdk-1.9.38
-fi
-
-# Python
-if [[ -f /usr/local/bin/virtualenvwrapper.sh ]]; then
-    export VIRTUALENV_DISTRIBUTE=true
-    export WORKON_HOME=~/venvs
-    source /usr/local/bin/virtualenvwrapper.sh
 fi
 
 # Homebrew
