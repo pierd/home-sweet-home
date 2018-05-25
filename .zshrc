@@ -50,6 +50,7 @@ plugins=(
   rust
   virtualenv
   virtualenvwrapper
+  z
 )
 
 source $ZSH/oh-my-zsh.sh
