@@ -140,6 +140,10 @@ if [[ -d ~/Library/Android/sdk ]]; then
     export ANDROID_NDK=$ANDROID_SDK/ndk-bundle
     export ANDROID_NDK_HOME=$ANDROID_NDK
     export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK:$PATH
+    nuke_android_ndk() {
+        export ANDROID_NDK=
+        export ANDROID_NDK_HOME=
+    }
 fi
 if [[ -d ~/appengine-java-sdk-1.9.38 ]]; then
     export APPENGINE_HOME=~/appengine-java-sdk-1.9.38
