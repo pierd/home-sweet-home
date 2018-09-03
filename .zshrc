@@ -121,6 +121,11 @@ export EDITOR='vim' # TODO: make it work for git and use mvim by default
 # FZF
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+# local sbin for Homebrew
+if [[ -d /usr/local/sbin ]]; then
+    export PATH=/usr/local/sbin:$PATH
+fi
+
 # Google Cloud SDK
 if [[ -d ~/google-cloud-sdk ]]; then
     source ~/google-cloud-sdk/path.zsh.inc
