@@ -50,6 +50,7 @@ plugins=(
   rust
   virtualenv
   virtualenvwrapper
+  z
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -120,6 +121,11 @@ export EDITOR='vim' # TODO: make it work for git and use mvim by default
 # FZF
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
+# local sbin for Homebrew
+if [[ -d /usr/local/sbin ]]; then
+    export PATH=/usr/local/sbin:$PATH
+fi
+
 # Google Cloud SDK
 if [[ -d ~/google-cloud-sdk ]]; then
     source ~/google-cloud-sdk/path.zsh.inc
@@ -139,6 +145,10 @@ if [[ -d ~/Library/Android/sdk ]]; then
     export ANDROID_NDK=$ANDROID_SDK/ndk-bundle
     export ANDROID_NDK_HOME=$ANDROID_NDK
     export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK:$PATH
+    nuke_android_ndk() {
+        export ANDROID_NDK=
+        export ANDROID_NDK_HOME=
+    }
 fi
 if [[ -d ~/appengine-java-sdk-1.9.38 ]]; then
     export APPENGINE_HOME=~/appengine-java-sdk-1.9.38
