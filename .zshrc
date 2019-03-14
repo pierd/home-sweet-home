@@ -181,3 +181,8 @@ export PATH=~/bin:$PATH
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
 fi
+
+# MacTex
+if [[ -d /Library/TeX/Distributions/Programs/texbin ]]; then
+    export PATH="$PATH:/Library/TeX/Distributions/Programs/texbin"
+fi
