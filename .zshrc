@@ -49,8 +49,6 @@ plugins=(
   git
   rust
   virtualenv
-  virtualenvwrapper
-  z
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -94,15 +92,10 @@ zstyle ':completion:*:kill:*'   force-list always
 
 # Aliases
 alias ls='ls -FG'
-alias nt='nosetests -vv'
 alias unquarantine='sudo xattr -d -r com.apple.quarantine'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 alias algrep='alias | grep'
 alias unssh='ssh -o UserKnownHostsFile=/dev/null -o CheckHostIP=no -o StrictHostKeyChecking=no'
-
-alias wrk='workon'
-alias cdp='cdproject'
-alias edit-wrk='mvim $VIRTUAL_ENV/bin/post{,de}activate'
 
 # Aliases (global)
 alias -g ...='../..'
@@ -133,11 +126,13 @@ if [[ -d ~/google-cloud-sdk ]]; then
 fi
 
 # Java + Android Dev + Java GAE
-use_java() {
-    export JAVA_HOME=$(/usr/libexec/java_home $*)
-    export PATH=$JAVA_HOME/bin:$PATH
-}
-use_java
+if [[ -f /usr/libexec/java_home ]]; then
+    use_java() {
+        export JAVA_HOME=$(/usr/libexec/java_home $*)
+        export PATH=$JAVA_HOME/bin:$PATH
+    }
+    use_java
+fi
 if [[ -d ~/Library/Android/sdk ]]; then
     export ANDROID_HOME=~/Library/Android/sdk
     export ANDROID_SDK=$ANDROID_HOME
