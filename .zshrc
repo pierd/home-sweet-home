@@ -109,7 +109,16 @@ if [[ -d ~/.zsh/func ]]; then
 fi
 
 # Global envs
-export EDITOR='vim' # TODO: make it work for git and use mvim by default
+export EDITOR='vim'
+
+# enable color support of ls and also add handy aliases
+if [ -x /usr/bin/dircolors ]; then
+    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    alias ls='ls --color=auto'
+    alias grep='grep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias egrep='egrep --color=auto'
+fi
 
 # FZF
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
