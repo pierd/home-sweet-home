@@ -1,4 +1,4 @@
-colorscheme wombat
+colorscheme wombat256mod
 set autoindent
 set smartindent
 set nu
