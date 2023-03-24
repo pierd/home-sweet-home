@@ -3,26 +3,38 @@ if [[ $UID -eq 0 ]]; then
     fpath=("${(@)fpath:#/usr/local/share/zsh/site-functions}")
 fi
 
-# Path to your oh-my-zsh installation.
-export ZSH=~/.oh-my-zsh
+# If you come from bash you might have to change your $PATH.
+# export PATH=$HOME/bin:/usr/local/bin:$PATH
 
-# Set name of the theme to load. Optionally, if you set this to "random"
-# it'll load a random theme each time that oh-my-zsh is loaded.
-# See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
+# Path to your oh-my-zsh installation.
+export ZSH="$HOME/.oh-my-zsh"
+
+# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
 ZSH_THEME="pierd"
+
+# Set list of themes to pick from when loading at random
+# Setting this variable when ZSH_THEME=random will cause zsh to load
+# a theme from this variable instead of looking in $ZSH/themes/
+# If set to an empty array, this variable will have no effect.
+# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
 
 # Uncomment the following line to use case-sensitive completion.
 CASE_SENSITIVE="true"
 
-# Uncomment the following line to use hyphen-insensitive completion. Case
-# sensitive completion must be off. _ and - will be interchangeable.
+# Uncomment the following line to use hyphen-insensitive completion.
+# Case-sensitive completion must be off. _ and - will be interchangeable.
 # HYPHEN_INSENSITIVE="true"
 
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
+# Uncomment one of the following lines to change the auto-update behavior
+# zstyle ':omz:update' mode disabled  # disable automatic updates
+# zstyle ':omz:update' mode auto      # update automatically without asking
+# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
 
 # Uncomment the following line to change how often to auto-update (in days).
-# export UPDATE_ZSH_DAYS=13
+# zstyle ':omz:update' frequency 13
+
+# Uncomment the following line if pasting URLs and other text is messed up.
+# DISABLE_MAGIC_FUNCTIONS="true"
 
 # Uncomment the following line to disable colors in ls.
 # DISABLE_LS_COLORS="true"
@@ -34,6 +46,9 @@ CASE_SENSITIVE="true"
 # ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
+# You can also set it to another string to have that shown instead of the default red dots.
+# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
+# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
 # COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
@@ -41,18 +56,25 @@ CASE_SENSITIVE="true"
 # much, much faster.
 DISABLE_UNTRACKED_FILES_DIRTY="true"
 
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
+# Uncomment the following line if you want to change the command execution time
+# stamp shown in the history command output.
+# You can set one of the optional three formats:
+# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
+# or set a custom format using the strftime function format specifications,
+# see 'man strftime' for details.
+# HIST_STAMPS="mm/dd/yyyy"
+
+# Would you like to use another custom folder than $ZSH/custom?
+# ZSH_CUSTOM=/path/to/new-custom-folder
+
+# Which plugins would you like to load?
+# Standard plugins can be found in $ZSH/plugins/
+# Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(
-  git
-  rust
-  virtualenv
-)
+plugins=(git rust virtualenv)
 
 source $ZSH/oh-my-zsh.sh
-
 
 ######################
 # User configuration #
@@ -134,7 +156,7 @@ if [[ -d ~/google-cloud-sdk ]]; then
     #source ~/google-cloud-sdk/completion.zsh.inc
 fi
 
-# Java + Android Dev + Java GAE
+# Java
 if [[ -f /usr/libexec/java_home ]]; then
     use_java() {
         export JAVA_HOME=$(/usr/libexec/java_home $*)
@@ -142,35 +164,10 @@ if [[ -f /usr/libexec/java_home ]]; then
     }
     use_java
 fi
-if [[ -d ~/Library/Android/sdk ]]; then
-    export ANDROID_HOME=~/Library/Android/sdk
-    export ANDROID_SDK=$ANDROID_HOME
-    export ANDROID_SDK_ROOT=$ANDROID_SDK
-    export ANDROID_NDK=$ANDROID_SDK/ndk-bundle
-    export ANDROID_NDK_HOME=$ANDROID_NDK
-    export PATH=$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$ANDROID_NDK:$PATH
-    nuke_android_ndk() {
-        export ANDROID_NDK=
-        export ANDROID_NDK_HOME=
-    }
-fi
-if [[ -d ~/appengine-java-sdk-1.9.38 ]]; then
-    export APPENGINE_HOME=~/appengine-java-sdk-1.9.38
-fi
 
 # Homebrew
 if [[ -f ~/.homebrew_github_api_token ]]; then
     export HOMEBREW_GITHUB_API_TOKEN="$(<~/.homebrew_github_api_token)"
-fi
-
-# Ruby
-if [[ -d ~/.rvm ]]; then
-    export PATH="$PATH:$HOME/.rvm/bin" # Add RVM to PATH for scripting
-fi
-
-# Rust
-if [[ -d ~/.cargo ]]; then
-    source $HOME/.cargo/env
 fi
 
 # Home Sweet Home
@@ -184,9 +181,4 @@ export PATH=~/bin:$PATH
 # very local overrides
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
-fi
-
-# MacTex
-if [[ -d /Library/TeX/Distributions/Programs/texbin ]]; then
-    export PATH="$PATH:/Library/TeX/Distributions/Programs/texbin"
 fi

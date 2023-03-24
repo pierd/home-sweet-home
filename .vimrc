@@ -15,13 +15,6 @@ set colorcolumn=80
 set ruler
 set guifont=Monaco:h13
 
-" Pathogen load
-filetype off
-
-call pathogen#infect()
-call pathogen#helptags()
-
-filetype plugin indent on
 syntax on
 
 " Syntastic settings
