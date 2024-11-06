@@ -166,6 +166,9 @@ if [[ -f /usr/libexec/java_home ]]; then
 fi
 
 # Homebrew
+if [[ -d /opt/homebrew/bin ]]; then
+    export PATH="/opt/homebrew/bin:$PATH"
+fi
 if [[ -f ~/.homebrew_github_api_token ]]; then
     export HOMEBREW_GITHUB_API_TOKEN="$(<~/.homebrew_github_api_token)"
 fi
