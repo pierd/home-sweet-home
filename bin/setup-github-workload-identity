@@ -1,0 +1,428 @@
+#!/bin/bash
+
+# Setup script for Direct Workload Identity Federation between GitHub Actions and Google Cloud
+# This script configures authentication for GitHub Actions to access Google Cloud resources
+# without service account keys using Workload Identity Federation.
+
+set -euo pipefail
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Function to print colored output
+print_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+print_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Function to check if required tools are installed
+check_prerequisites() {
+    print_info "Checking prerequisites..."
+    
+    if ! command -v gcloud &> /dev/null; then
+        print_error "gcloud CLI is not installed. Please install it first."
+        print_info "Visit: https://cloud.google.com/sdk/docs/install"
+        exit 1
+    fi
+    
+    print_success "gcloud CLI is installed"
+}
+
+# Function to validate required variables
+validate_variables() {
+    print_info "Validating required variables..."
+    
+    if [[ -z "${PROJECT_ID:-}" ]]; then
+        print_error "PROJECT_ID is required but not set"
+        exit 1
+    fi
+    
+    # Check that either GITHUB_ORG_ID or GITHUB_REPO_ID is provided, but not both
+    if [[ -n "${GITHUB_ORG_ID:-}" ]] && [[ -n "${GITHUB_REPO_ID:-}" ]]; then
+        print_error "Both GITHUB_ORG_ID and GITHUB_REPO_ID are set. Please provide only one."
+        exit 1
+    fi
+    
+    if [[ -z "${GITHUB_ORG_ID:-}" ]] && [[ -z "${GITHUB_REPO_ID:-}" ]]; then
+        print_error "Either GITHUB_ORG_ID or GITHUB_REPO_ID is required but neither is set"
+        exit 1
+    fi
+    
+    # Set the attribute condition based on which variable is provided
+    if [[ -n "${GITHUB_ORG_ID:-}" ]]; then
+        ATTRIBUTE_CONDITION="assertion.repository_owner_id == '${GITHUB_ORG_ID}'"
+        GITHUB_IDENTIFIER="${GITHUB_ORG_ID}"
+        IDENTIFIER_TYPE="organization"
+    else
+        ATTRIBUTE_CONDITION="assertion.repository_id == '${GITHUB_REPO_ID}'"
+        GITHUB_IDENTIFIER="${GITHUB_REPO_ID}"
+        IDENTIFIER_TYPE="repository"
+    fi
+    
+    print_success "All required variables are set (using GitHub ${IDENTIFIER_TYPE}: ${GITHUB_IDENTIFIER})"
+}
+
+# Function to verify gcloud authentication and project
+verify_gcloud_setup() {
+    print_info "Verifying gcloud authentication and project setup..."
+    
+    # Check if user is authenticated
+    if ! gcloud auth list --filter=status:ACTIVE --format="value(account)" | grep -q .; then
+        print_error "No active gcloud authentication found"
+        print_info "Please run: gcloud auth login"
+        exit 1
+    fi
+    
+    # Set the project
+    gcloud config set project "${PROJECT_ID}"
+    
+    # Verify project exists and user has access
+    if ! gcloud projects describe "${PROJECT_ID}" &> /dev/null; then
+        print_error "Cannot access project '${PROJECT_ID}' or project does not exist"
+        exit 1
+    fi
+    
+    print_success "gcloud is properly configured for project: ${PROJECT_ID}"
+}
+
+# Function to enable required APIs
+enable_apis() {
+    print_info "Enabling required Google Cloud APIs..."
+    
+    local apis=(
+        "iam.googleapis.com"
+        "cloudresourcemanager.googleapis.com"
+        "iamcredentials.googleapis.com"
+    )
+    
+    for api in "${apis[@]}"; do
+        print_info "Enabling ${api}..."
+        gcloud services enable "${api}" --project="${PROJECT_ID}"
+    done
+    
+    print_success "Required APIs have been enabled"
+}
+
+# Step 1: Create a Workload Identity Pool
+create_workload_identity_pool() {
+    print_info "Step 1: Creating Workload Identity Pool '${POOL_ID}'..."
+    
+    if gcloud iam workload-identity-pools describe "${POOL_ID}" \
+        --project="${PROJECT_ID}" \
+        --location="global" &> /dev/null; then
+        print_warning "Workload Identity Pool '${POOL_ID}' already exists, skipping creation"
+    else
+        gcloud iam workload-identity-pools create "${POOL_ID}" \
+            --project="${PROJECT_ID}" \
+            --location="global" \
+            --display-name="${POOL_DISPLAY_NAME}"
+        
+        print_success "Workload Identity Pool '${POOL_ID}' created successfully"
+    fi
+}
+
+# Step 2: Get the full ID of the Workload Identity Pool
+get_workload_identity_pool_id() {
+    print_info "Step 2: Getting full Workload Identity Pool ID..."
+    
+    WORKLOAD_IDENTITY_POOL_ID=$(gcloud iam workload-identity-pools describe "${POOL_ID}" \
+        --project="${PROJECT_ID}" \
+        --location="global" \
+        --format="value(name)")
+    
+    print_success "Workload Identity Pool ID: ${WORKLOAD_IDENTITY_POOL_ID}"
+}
+
+# Step 3: Create a Workload Identity Provider in the pool
+create_workload_identity_provider() {
+    print_info "Step 3: Creating Workload Identity Provider '${PROVIDER_ID}'..."
+    
+    if gcloud iam workload-identity-pools providers describe "${PROVIDER_ID}" \
+        --project="${PROJECT_ID}" \
+        --location="global" \
+        --workload-identity-pool="${POOL_ID}" &> /dev/null; then
+        print_warning "Workload Identity Provider '${PROVIDER_ID}' already exists, skipping creation"
+    else
+        gcloud iam workload-identity-pools providers create-oidc "${PROVIDER_ID}" \
+            --project="${PROJECT_ID}" \
+            --location="global" \
+            --workload-identity-pool="${POOL_ID}" \
+            --display-name="${PROVIDER_DISPLAY_NAME}" \
+            --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner,attribute.repository_id=assertion.repository_id,attribute.repository_owner_id=assertion.repository_owner_id" \
+            --attribute-condition="${ATTRIBUTE_CONDITION}" \
+            --issuer-uri="https://token.actions.githubusercontent.com"
+        
+        print_success "Workload Identity Provider '${PROVIDER_ID}' created successfully"
+    fi
+}
+
+# Step 4: Extract the Workload Identity Provider resource name
+get_workload_identity_provider_name() {
+    print_info "Step 4: Getting Workload Identity Provider resource name..."
+    
+    # Add retry logic as the provider might need a moment to propagate
+    local max_attempts=5
+    local attempt=1
+    
+    while [[ $attempt -le $max_attempts ]]; do
+        if WORKLOAD_IDENTITY_PROVIDER_NAME=$(gcloud iam workload-identity-pools providers describe "${PROVIDER_ID}" \
+            --project="${PROJECT_ID}" \
+            --location="global" \
+            --workload-identity-pool="${POOL_ID}" \
+            --format="value(name)" 2>/dev/null); then
+            print_success "Workload Identity Provider name: ${WORKLOAD_IDENTITY_PROVIDER_NAME}"
+            return 0
+        else
+            if [[ $attempt -lt $max_attempts ]]; then
+                print_info "Provider not ready yet, waiting 3 seconds... (attempt $attempt/$max_attempts)"
+                sleep 3
+            else
+                print_error "Failed to retrieve Workload Identity Provider after $max_attempts attempts"
+                return 1
+            fi
+        fi
+        ((attempt++))
+    done
+}
+
+# Step 5: Create Service Account if it doesn't exist (optional)
+create_service_account() {
+    if [[ -z "${SERVICE_ACCOUNT:-}" ]]; then
+        print_info "Step 5: Skipping service account creation (SERVICE_ACCOUNT not provided)"
+        return 0
+    fi
+    
+    print_info "Step 5: Creating service account '${SERVICE_ACCOUNT}' if it doesn't exist..."
+    
+    local service_account_email="${SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    
+    # Check if service account already exists
+    if gcloud iam service-accounts describe "${service_account_email}" --project="${PROJECT_ID}" &> /dev/null; then
+        print_warning "Service account '${service_account_email}' already exists, skipping creation"
+    else
+        # Create the service account
+        gcloud iam service-accounts create "${SERVICE_ACCOUNT}" \
+            --project="${PROJECT_ID}" \
+            --display-name="GitHub Actions Service Account" \
+            --description="Service account for GitHub Actions Workload Identity Federation"
+        
+        print_success "Service account '${service_account_email}' created successfully"
+    fi
+}
+
+# Step 6: Grant Workload Identity access to Service Account (optional)
+grant_service_account_access() {
+    if [[ -z "${SERVICE_ACCOUNT:-}" ]]; then
+        print_info "Step 6: Skipping service account access (SERVICE_ACCOUNT not provided)"
+        return 0
+    fi
+    
+    print_info "Step 6: Granting Workload Identity access to service account '${SERVICE_ACCOUNT}'..."
+    
+    # Determine the member string based on whether we're using org or repo ID
+    local member_string
+    if [[ -n "${GITHUB_ORG_ID:-}" ]]; then
+        # For organization-based access, we need to use a different approach
+        # since we don't have a specific repository name
+        member_string="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository_owner_id/${GITHUB_ORG_ID}"
+    else
+        # For repository-based access, use the repository ID directly
+        member_string="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository_id/${GITHUB_REPO_ID}"
+    fi
+    
+    # Add IAM policy binding
+    if gcloud iam service-accounts add-iam-policy-binding "${SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com" \
+        --project="${PROJECT_ID}" \
+        --role="roles/iam.workloadIdentityUser" \
+        --member="${member_string}"; then
+        print_success "Service account access granted successfully"
+    else
+        print_error "Failed to grant service account access"
+        return 1
+    fi
+}
+
+# Function to display final configuration
+display_final_config() {
+    print_info "Setup completed successfully!"
+    echo
+    print_info "=== Configuration Summary ==="
+    echo "Project ID: ${PROJECT_ID}"
+    if [[ "${IDENTIFIER_TYPE}" == "organization" ]]; then
+        echo "GitHub Organization ID: ${GITHUB_IDENTIFIER}"
+    else
+        echo "GitHub Repository ID: ${GITHUB_IDENTIFIER}"
+    fi
+    echo "Attribute Condition: ${ATTRIBUTE_CONDITION}"
+    echo "Pool ID: ${POOL_ID}"
+    echo "Provider ID: ${PROVIDER_ID}"
+    echo "Workload Identity Pool ID: ${WORKLOAD_IDENTITY_POOL_ID}"
+    echo "Workload Identity Provider Name: ${WORKLOAD_IDENTITY_PROVIDER_NAME}"
+    if [[ -n "${SERVICE_ACCOUNT:-}" ]]; then
+        echo "Service Account: ${SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    fi
+    echo
+    print_info "=== Next Steps ==="
+    echo "1. Add IAM bindings for your specific Google Cloud resources"
+    echo "2. Configure your GitHub Actions workflow to use this Workload Identity Provider"
+    echo "3. Use the following values in your GitHub Actions:"
+    echo "   - workload_identity_provider: ${WORKLOAD_IDENTITY_PROVIDER_NAME}"
+    if [[ -n "${SERVICE_ACCOUNT:-}" ]]; then
+        echo "   - service_account: ${SERVICE_ACCOUNT}@${PROJECT_ID}.iam.gserviceaccount.com"
+    else
+        echo "   - service_account: (if using service account impersonation)"
+    fi
+    echo
+    if [[ -z "${SERVICE_ACCOUNT:-}" ]]; then
+        print_warning "No service account was configured. You may need to manually grant IAM permissions!"
+    else
+        print_warning "Remember to grant the service account appropriate permissions for your Google Cloud resources!"
+    fi
+}
+
+# Main execution function
+main() {
+    echo "=== GitHub Actions Workload Identity Federation Setup ==="
+    echo
+    
+    # Check prerequisites
+    check_prerequisites
+    
+    # Validate required variables
+    validate_variables
+    
+    # Verify gcloud setup
+    verify_gcloud_setup
+    
+    # Enable required APIs
+    enable_apis
+    
+    # Execute the 6 main steps
+    create_workload_identity_pool
+    get_workload_identity_pool_id
+    create_workload_identity_provider
+    
+    if get_workload_identity_provider_name; then
+        # Create service account if needed (optional step)
+        create_service_account
+        
+        # Grant service account access (optional step)
+        grant_service_account_access
+        
+        # Display final configuration only if all steps succeeded
+        display_final_config
+    else
+        print_error "Setup partially completed but failed to retrieve provider name."
+        print_info "You can manually get the provider name later with:"
+        echo "gcloud iam workload-identity-pools providers describe \"${PROVIDER_ID}\" \\"
+        echo "  --project=\"${PROJECT_ID}\" \\"
+        echo "  --location=\"global\" \\"
+        echo "  --workload-identity-pool=\"${POOL_ID}\" \\"
+        echo "  --format=\"value(name)\""
+        exit 1
+    fi
+}
+
+# ========================
+# CONFIGURATION VARIABLES
+# ========================
+# Set these variables according to your setup
+
+# REQUIRED: Your Google Cloud Project ID
+PROJECT_ID="${PROJECT_ID:-}"
+
+# REQUIRED: Either GitHub organization ID or repository ID (but not both)
+# Format for GITHUB_ORG_ID: "123456789" (numeric organization ID)
+# Format for GITHUB_REPO_ID: "987654321" (numeric repository ID)
+GITHUB_ORG_ID="${GITHUB_ORG_ID:-}"
+GITHUB_REPO_ID="${GITHUB_REPO_ID:-}"
+
+# OPTIONAL: Service account to grant Workload Identity access to
+# Format: "my-service-account" (without @project.iam.gserviceaccount.com suffix)
+SERVICE_ACCOUNT="${SERVICE_ACCOUNT:-github}"
+
+# OPTIONAL: Customize these if needed
+POOL_ID="${POOL_ID:-github}"
+POOL_DISPLAY_NAME="${POOL_DISPLAY_NAME:-GitHub Actions Pool}"
+PROVIDER_ID="${PROVIDER_ID:-github-repo}"
+PROVIDER_DISPLAY_NAME="${PROVIDER_DISPLAY_NAME:-GitHub repo Provider}"
+
+# ========================
+# USAGE INSTRUCTIONS
+# ========================
+if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
+    echo "Usage: $0 [PROJECT_ID] [GITHUB_ORG_ID|GITHUB_REPO_ID]"
+    echo
+    echo "This script sets up Direct Workload Identity Federation for GitHub Actions."
+    echo
+    echo "Arguments:"
+    echo "  PROJECT_ID              Your Google Cloud Project ID"
+    echo "  GITHUB_ORG_ID           Your GitHub organization ID (numeric, e.g., '123456789')"
+    echo "  GITHUB_REPO_ID          Your GitHub repository ID (numeric, e.g., '987654321')"
+    echo
+    echo "Note: Provide either GITHUB_ORG_ID or GITHUB_REPO_ID, but not both."
+    echo "Get the organization ID or repository ID from GitHub API:"
+    echo "  For organization ID:"
+    echo "    curl -H 'Authorization: Bearer <GITHUB_TOKEN>' https://api.github.com/orgs/<org>"
+    echo "  For repository ID:"
+    echo "    curl -H 'Authorization: Bearer <GITHUB_TOKEN>' https://api.github.com/repos/<owner>/<repo>"
+    echo
+    echo "GitHub tokens can be generated from your GitHub account settings."
+    echo "  https://github.com/settings/tokens"
+    echo
+    echo "Examples:"
+    echo "  # Using organization ID:"
+    echo "  $0 my-gcp-project 123456789"
+    echo "  PROJECT_ID=my-project GITHUB_ORG_ID=123456789 $0"
+    echo
+    echo "  # Using repository ID:"
+    echo "  $0 my-gcp-project 987654321"
+    echo "  PROJECT_ID=my-project GITHUB_REPO_ID=987654321 $0"
+    echo
+    echo "  # With service account access:"
+    echo "  PROJECT_ID=my-project GITHUB_ORG_ID=123456789 SERVICE_ACCOUNT=my-sa $0"
+    echo
+    echo "Environment Variables:"
+    echo "  PROJECT_ID             (required) Google Cloud Project ID"
+    echo "  GITHUB_ORG_ID          (required*) GitHub organization ID (numeric)"
+    echo "  GITHUB_REPO_ID         (required*) GitHub repository ID (numeric)"
+    echo "  SERVICE_ACCOUNT        (optional) Service account name (without @project.iam.gserviceaccount.com)"
+    echo "  POOL_ID                (optional) Workload Identity Pool ID (default: 'github')"
+    echo "  POOL_DISPLAY_NAME      (optional) Pool display name (default: 'GitHub Actions Pool')"
+    echo "  PROVIDER_ID            (optional) Provider ID (default: 'github-repo')"
+    echo "  PROVIDER_DISPLAY_NAME  (optional) Provider display name (default: 'GitHub repo Provider')"
+    echo
+    echo "  * Either GITHUB_ORG_ID or GITHUB_REPO_ID is required, but not both."
+    echo
+    exit 0
+fi
+
+# Parse command line arguments
+if [[ $# -ge 1 ]]; then
+    PROJECT_ID="$1"
+fi
+
+if [[ $# -ge 2 ]]; then
+    # All GitHub IDs are now numeric, so we don't need to distinguish by format
+    # The user should specify which type via the appropriate environment variable
+    # or we'll treat the second argument as a repository ID by default
+    GITHUB_REPO_ID="$2"
+fi
+
+# Run the main function
+main
