@@ -172,11 +172,16 @@ fi
 
 # Homebrew
 if [[ -d /opt/homebrew/bin ]]; then
-    export PATH="/opt/homebrew/bin:$PATH"
+    export PATH="/opt/homebrew/sbin:/opt/homebrew/bin:$PATH"
     fpath=(/opt/homebrew/share/zsh/site-functions $fpath)
 fi
 if [[ -f ~/.homebrew_github_api_token ]]; then
     export HOMEBREW_GITHUB_API_TOKEN="$(<~/.homebrew_github_api_token)"
+fi
+
+# Rust
+if [[ -d ~/.cargo/bin ]]; then
+    export PATH=~/.cargo/bin:$PATH
 fi
 
 # Home Sweet Home
@@ -188,15 +193,20 @@ fi
 export PATH=~/bin:$PATH
 
 # Amoxide
-if which am > /dev/null; then
-    eval "$(am init zsh)"
+#if which am > /dev/null; then
+#    eval "$(am init zsh)"
+#fi
+
+autoload -U compinit
+compinit
+
+# smolvm
+if which smolvm > /dev/null; then
+    source <(smolvm completion zsh)
 fi
 
 # very local overrides
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
 fi
-
-autoload -U compinit
-compinit
 
