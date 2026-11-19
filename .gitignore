@@ -5,3 +5,5 @@ local.properties
 .idea
 *.pyc
 .venv
+
+**/.claude/settings.local.json
