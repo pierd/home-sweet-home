@@ -26,8 +26,10 @@ Consequences:
 - The only files inside `~/.home-sweet-home/` are this repo's meta files:
   `README.md`, `LICENSE`, `init.sh`, `AGENTS.md`, `CLAUDE.md` (tracked as
   `.home-sweet-home/<name>`). Don't put copies of dotfiles there.
-- New files must be added with `git add -f <path>` because of the `*` exclude.
-  Untracked files never show up in `git status`.
+- Because of the `*` exclude, plain `git add <path>` fails even for files that
+  are already tracked. Use `git add -u <path>` (or `git commit -a`) to stage
+  changes to tracked files, and `git add -f <path>` to add new ones. Untracked
+  files never show up in `git status`.
 - The `home` alias isn't available in a non-interactive agent shell. Plain `git`
   works from inside `~/.home-sweet-home` (thanks to `core.worktree`), but paths
   are relative to the cwd, so `~/.zshrc` is `../.zshrc`. Alternatively:
