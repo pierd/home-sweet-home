@@ -23,13 +23,9 @@ Consequences:
 
 - Edit the **real files in `~`** (e.g. `~/.zshrc`, `~/bin/funssh`), never copies
   under `~/.home-sweet-home/`.
-- `~/.home-sweet-home/` itself contains **stale leftovers** from the original
-  clone (`.zshrc`, `.vimrc`, `.vim/`, `.oh-my-zsh/`, `bin/`, `.gitignore`, and a
-  nested `.home-sweet-home/` dir), all from 2023. They are not tracked at those
-  paths and are out of date. Ignore them; don't edit or "sync" them.
-- The only tracked files physically inside `~/.home-sweet-home/` are this repo's
-  meta files: `README.md`, `LICENSE`, `init.sh`, `AGENTS.md`, `CLAUDE.md`
-  (tracked as `.home-sweet-home/<name>`).
+- The only files inside `~/.home-sweet-home/` are this repo's meta files:
+  `README.md`, `LICENSE`, `init.sh`, `AGENTS.md`, `CLAUDE.md` (tracked as
+  `.home-sweet-home/<name>`). Don't put copies of dotfiles there.
 - New files must be added with `git add -f <path>` because of the `*` exclude.
   Untracked files never show up in `git status`.
 - The `home` alias isn't available in a non-interactive agent shell. Plain `git`
