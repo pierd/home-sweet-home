@@ -1,93 +1,31 @@
-# when root compinit doesn't like functions added by Homebrew - remove them
-if [[ $UID -eq 0 ]]; then
-    fpath=("${(@)fpath:#/usr/local/share/zsh/site-functions}")
-fi
-
-# If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
-
-# Path to your oh-my-zsh installation.
-export ZSH="$HOME/.oh-my-zsh"
-
-# See https://github.com/ohmyzsh/ohmyzsh/wiki/Themes
-ZSH_THEME="pierd"
-
-# Set list of themes to pick from when loading at random
-# Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in $ZSH/themes/
-# If set to an empty array, this variable will have no effect.
-# ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
-
-# Uncomment the following line to use case-sensitive completion.
-CASE_SENSITIVE="true"
-
-# Uncomment the following line to use hyphen-insensitive completion.
-# Case-sensitive completion must be off. _ and - will be interchangeable.
-# HYPHEN_INSENSITIVE="true"
-
-# Uncomment one of the following lines to change the auto-update behavior
-# zstyle ':omz:update' mode disabled  # disable automatic updates
-# zstyle ':omz:update' mode auto      # update automatically without asking
-# zstyle ':omz:update' mode reminder  # just remind me to update when it's time
-
-# Uncomment the following line to change how often to auto-update (in days).
-# zstyle ':omz:update' frequency 13
-
-# Uncomment the following line if pasting URLs and other text is messed up.
-# DISABLE_MAGIC_FUNCTIONS="true"
-
-# Uncomment the following line to disable colors in ls.
-# DISABLE_LS_COLORS="true"
-
-# Uncomment the following line to disable auto-setting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment the following line to enable command auto-correction.
-# ENABLE_CORRECTION="true"
-
-# Uncomment the following line to display red dots whilst waiting for completion.
-# You can also set it to another string to have that shown instead of the default red dots.
-# e.g. COMPLETION_WAITING_DOTS="%F{yellow}waiting...%f"
-# Caution: this setting can cause issues with multiline prompts in zsh < 5.7.1 (see #5765)
-# COMPLETION_WAITING_DOTS="true"
-
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-DISABLE_UNTRACKED_FILES_DIRTY="true"
-
-# Uncomment the following line if you want to change the command execution time
-# stamp shown in the history command output.
-# You can set one of the optional three formats:
-# "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
-# or set a custom format using the strftime function format specifications,
-# see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
-
-# Would you like to use another custom folder than $ZSH/custom?
-# ZSH_CUSTOM=/path/to/new-custom-folder
-
-# Which plugins would you like to load?
-# Standard plugins can be found in $ZSH/plugins/
-# Custom plugins may be added to $ZSH_CUSTOM/plugins/
-# Example format: plugins=(rails git textmate ruby lighthouse)
-# Add wisely, as too many plugins slow down shell startup.
-plugins=(git rust virtualenv)
-
-source $ZSH/oh-my-zsh.sh
-
-######################
-# User configuration #
-######################
-
 setopt notify
 setopt extended_glob
 setopt autocd
+setopt auto_pushd
+setopt pushd_ignore_dups
+setopt pushdminus
+setopt interactive_comments
+setopt long_list_jobs
+unsetopt flow_control
 unsetopt beep
 autoload zmv
 
+# History
+HISTFILE=~/.zsh_history
+HISTSIZE=50000
+SAVEHIST=10000
+setopt extended_history
+setopt hist_expire_dups_first
+setopt hist_ignore_dups
+setopt hist_ignore_space
+setopt hist_verify
+setopt share_history
+
 # Key bindings
 bindkey -v
+bindkey '^?' backward-delete-char
+bindkey '^H' backward-delete-char
+bindkey '^W' backward-kill-word
 bindkey '^[[3~' delete-char
 bindkey '^[OH' beginning-of-line
 bindkey '^[[H' beginning-of-line
@@ -95,6 +33,7 @@ bindkey '^[OF' end-of-line
 bindkey '^[[F' end-of-line
 bindkey '^[[1;5D' backward-word
 bindkey '^[[1;5C' forward-word
+bindkey '^[[Z' reverse-menu-complete
 bindkey '^R' history-incremental-search-backward
 bindkey '^[[A' up-line-or-history
 bindkey '^[OA' up-line-or-history
@@ -105,8 +44,18 @@ bindkey '^N' down-history
 bindkey '^A' beginning-of-line
 bindkey '^E' end-of-line
 
+# LS colors, made with http://geoff.greer.fm/lscolors/
+export LSCOLORS='ExFxCxDxBxEGEDABAGACAD'
+export LS_COLORS='di=1;34:ln=1;35:so=1;32:pi=1;33:ex=1;31:bd=1;34;1;46:cd=1;34;1;43:su=1;30;1;41:sg=1;30;1;46:tw=1;30;1;42:ow=1;30;1;43'
+
 # Completion
+setopt complete_in_word
+setopt always_to_end
+zstyle ':completion:*' matcher-list 'r:|=*' 'l:|=* r:|=*'
 zstyle ':completion:*' glob 1
+zstyle ':completion:*' special-dirs true
+zstyle ':completion:*' use-cache yes
+zstyle ':completion:*' cache-path ~/.cache/zsh
 zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*' menu select=long-list select=1
 zstyle ':completion:*:*:kill:*' menu yes select
@@ -114,6 +63,8 @@ zstyle ':completion:*:kill:*'   force-list always
 
 # Aliases
 alias ls='ls -FG'
+alias l='ls -lah'
+alias grep='grep --color=auto'
 alias unquarantine='sudo xattr -d -r com.apple.quarantine'
 alias myip='dig +short myip.opendns.com @resolver1.opendns.com'
 alias algrep='alias | grep'
@@ -124,11 +75,36 @@ alias -g ...='../..'
 alias -g ....='../../..'
 alias -g .....='../../../..'
 
-# additional function
-if [[ -d ~/.zsh/func ]]; then
-    fpath=(~/.zsh/func $fpath)
-    typeset -U fpath
-fi
+# Git
+git_main_branch() {
+    local ref
+    for ref in refs/{heads,remotes/{origin,upstream}}/{main,trunk,master}; do
+        if git show-ref -q --verify $ref; then
+            echo ${ref:t}
+            return
+        fi
+    done
+    echo master
+}
+alias g='git'
+alias ga='git add'
+alias gb='git branch'
+alias gbd='git branch --delete'
+alias gc='git commit --verbose'
+alias gcmsg='git commit --message'
+alias gco='git checkout'
+alias gd='git diff'
+alias gl='git pull'
+alias gmom='git merge origin/$(git_main_branch)'
+alias gp='git push'
+alias gst='git status'
+
+# Terminal title: current dir at the prompt, the command while it runs
+autoload -Uz add-zsh-hook
+_title_precmd() { print -Pn '\e]0;%~\a' }
+_title_preexec() { print -rn -- $'\e]0;'"${1//[[:cntrl:]]/}"$'\a' }
+add-zsh-hook precmd _title_precmd
+add-zsh-hook preexec _title_preexec
 
 # Global envs
 export EDITOR='vim'
@@ -137,7 +113,6 @@ export EDITOR='vim'
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
     alias ls='ls --color=auto'
-    alias grep='grep --color=auto'
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
 fi
@@ -155,11 +130,6 @@ if [[ -d ~/google-cloud-sdk ]]; then
     source ~/google-cloud-sdk/path.zsh.inc
     #source ~/google-cloud-sdk/completion.zsh.inc
 fi
-
-# NVM
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # Java
 if [[ -f /usr/libexec/java_home ]]; then
@@ -179,10 +149,20 @@ if [[ -f ~/.homebrew_github_api_token ]]; then
     export HOMEBREW_GITHUB_API_TOKEN="$(<~/.homebrew_github_api_token)"
 fi
 
-# Rust
+# Rust (cargo completions come from Homebrew, rustup's are generated once)
 if [[ -d ~/.cargo/bin ]]; then
     export PATH=~/.cargo/bin:$PATH
 fi
+if which rustup > /dev/null && [[ ! -f ~/.zsh/func/_rustup ]]; then
+    mkdir -p ~/.zsh/func
+    rustup completions zsh > ~/.zsh/func/_rustup
+fi
+
+# additional function
+if [[ -d ~/.zsh/func ]]; then
+    fpath=(~/.zsh/func $fpath)
+fi
+typeset -U fpath
 
 # Home Sweet Home
 if [[ -d ~/.home-sweet-home ]]; then
@@ -197,6 +177,7 @@ export PATH=~/bin:$PATH
 #    eval "$(am init zsh)"
 #fi
 
+# Run once, after all fpath changes
 autoload -U compinit
 compinit
 
@@ -205,8 +186,12 @@ if which smolvm > /dev/null; then
     source <(smolvm completion zsh)
 fi
 
+# Prompt
+if which starship > /dev/null; then
+    eval "$(starship init zsh)"
+fi
+
 # very local overrides
 if [[ -f ~/.zshrc.local ]]; then
     source ~/.zshrc.local
 fi
-

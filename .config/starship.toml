@@ -1,0 +1,10 @@
+# Starship prompt config: https://starship.rs/config/
+# Starting from the defaults; `starship explain` shows which module prints what,
+# `starship timings` shows how long each one takes.
+"$schema" = 'https://starship.rs/config-schema.json'
+
+[gcloud]
+format = 'on [$symbol$project \($active\)]($style) '
+
+[status]
+disabled = false

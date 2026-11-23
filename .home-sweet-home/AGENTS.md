@@ -5,7 +5,8 @@ Context for AI agents working on this repo. Read this before touching anything.
 ## What this is
 
 Kuba's personal home-directory config and scripts (dotfiles), for macOS (Apple
-Silicon, Homebrew in `/opt/homebrew`) with zsh + oh-my-zsh. Remote:
+Silicon, Homebrew in `/opt/homebrew`) with plain zsh (no framework) and a
+Starship prompt. Remote:
 `git@github.com:pierd/home-sweet-home.git`, branch `master`.
 
 ## How the repo is wired (important)
@@ -45,8 +46,8 @@ time of writing:
 | Path (relative to `~`) | Purpose |
 | --- | --- |
 | `.gitignore` | Ignore rules for the repo (in `~`, so it applies to the whole work tree) |
-| `.zshrc` | Main shell config: oh-my-zsh, vi keybindings, aliases, PATH setup |
-| `.oh-my-zsh/custom/themes/pierd.zsh-theme` | Custom prompt theme |
+| `.zshrc` | Main shell config: options, history, vi keybindings, completion, aliases (incl. git), PATH setup |
+| `.config/starship.toml` | Starship prompt config |
 | `.vimrc`, `.vim/colors/wombat256mod.vim` | Vim config and color scheme |
 | `bin/funssh` | fzf picker over `~/.ssh/known_hosts`, then ssh without host-key checks |
 | `bin/git-open` | Open the GitHub page for the current repo's `origin` |
@@ -71,8 +72,12 @@ wrappers, binaries such as `tshark`). Don't add them unless asked.
   fi
   ```
   Use `which foo > /dev/null` for commands. Order matters: `~/bin` is prepended
-  last so it wins, `compinit` runs after `fpath` changes, and `~/.zshrc.local`
-  is sourced at the very end.
+  last so it wins, `compinit` runs exactly once after all `fpath` changes,
+  anything calling `compdef` comes after it, Starship is initialized near the
+  end, and `~/.zshrc.local` is sourced at the very end.
+- No oh-my-zsh or other framework. The git aliases in `.zshrc` are a deliberate
+  subset of oh-my-zsh's (`gst`, `gl`, `gp`, `gcmsg`, `gmom`…); add new ones
+  there by hand. Node isn't set up in `.zshrc` (nvm was removed on purpose).
 - Indent with 4 spaces (the `.vimrc` sets this too).
 - Scripts in `bin/` start with `#!/bin/bash`, are executable, and are small and
   single-purpose.
