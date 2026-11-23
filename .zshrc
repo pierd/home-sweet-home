@@ -158,6 +158,28 @@ if which rustup > /dev/null && [[ ! -f ~/.zsh/func/_rustup ]]; then
     rustup completions zsh > ~/.zsh/func/_rustup
 fi
 
+# Node (from nvm's installs; nvm itself is only loaded on first use, it's slow)
+if [[ -s ~/.nvm/nvm.sh ]]; then
+    export NVM_DIR=~/.nvm
+    () {
+        local alias_default=node
+        [[ -f $NVM_DIR/alias/default ]] && alias_default="$(<$NVM_DIR/alias/default)"
+        alias_default=${alias_default#v}
+        local -a versions
+        versions=($NVM_DIR/versions/node/v${alias_default}(N/))
+        [[ $#versions -eq 0 ]] && versions=($NVM_DIR/versions/node/v${alias_default}.*(N/nOn))
+        [[ $#versions -eq 0 ]] && versions=($NVM_DIR/versions/node/v*(N/nOn))
+        if [[ $#versions -gt 0 ]]; then
+            export PATH=$versions[1]/bin:$PATH
+        fi
+    }
+    nvm() {
+        unset -f nvm
+        source $NVM_DIR/nvm.sh
+        nvm "$@"
+    }
+fi
+
 # additional function
 if [[ -d ~/.zsh/func ]]; then
     fpath=(~/.zsh/func $fpath)

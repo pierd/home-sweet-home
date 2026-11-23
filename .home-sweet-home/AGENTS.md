@@ -77,7 +77,9 @@ wrappers, binaries such as `tshark`). Don't add them unless asked.
   end, and `~/.zshrc.local` is sourced at the very end.
 - No oh-my-zsh or other framework. The git aliases in `.zshrc` are a deliberate
   subset of oh-my-zsh's (`gst`, `gl`, `gp`, `gcmsg`, `gmom`…); add new ones
-  there by hand. Node isn't set up in `.zshrc` (nvm was removed on purpose).
+  there by hand. Node comes from nvm's installs in `~/.nvm`: `.zshrc` puts the
+  default version's `bin` on PATH directly and only sources the slow `nvm.sh`
+  the first time `nvm` is run. Don't go back to sourcing `nvm.sh` at startup.
 - Indent with 4 spaces (the `.vimrc` sets this too).
 - Scripts in `bin/` start with `#!/bin/bash`, are executable, and are small and
   single-purpose.
