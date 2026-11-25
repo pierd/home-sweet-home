@@ -46,7 +46,9 @@ time of writing:
 | Path (relative to `~`) | Purpose |
 | --- | --- |
 | `.gitignore` | Ignore rules for the repo (in `~`, so it applies to the whole work tree) |
-| `.zshrc` | Main shell config: options, history, vi keybindings, completion, aliases (incl. git), PATH setup |
+| `.zshrc` | Main shell config: options, history, vi keybindings, completion, aliases, PATH setup |
+| `.git_aliases.sh` | Git aliases, sourced by both zsh and bash |
+| `.bashrc`, `.bash_profile` | Minimal bash config: git aliases, `.profile`, `~/.bashrc.local` |
 | `.config/starship.toml` | Starship prompt config |
 | `.vimrc`, `.vim/colors/wombat256mod.vim` | Vim config and color scheme |
 | `bin/funssh` | fzf picker over `~/.ssh/known_hosts`, then ssh without host-key checks |
@@ -75,9 +77,9 @@ wrappers, binaries such as `tshark`). Don't add them unless asked.
   last so it wins, `compinit` runs exactly once after all `fpath` changes,
   anything calling `compdef` comes after it, Starship is initialized near the
   end, and `~/.zshrc.local` is sourced at the very end.
-- No oh-my-zsh or other framework. The git aliases in `.zshrc` are a deliberate
-  subset of oh-my-zsh's (`gst`, `gl`, `gp`, `gcmsg`, `gmom`…); add new ones
-  there by hand. Node comes from nvm's installs in `~/.nvm`: `.zshrc` puts the
+- No oh-my-zsh or other framework. The git aliases in `.git_aliases.sh` are a
+  subset of oh-my-zsh's (`gst`, `gl`, `gcm`, `gcmsg`, `gmom`…); add new ones
+  there by hand. That file must work in both zsh and bash 3.2. Node comes from nvm's installs in `~/.nvm`: `.zshrc` puts the
   default version's `bin` on PATH directly and only sources the slow `nvm.sh`
   the first time `nvm` is run. Don't go back to sourcing `nvm.sh` at startup.
 - Indent with 4 spaces (the `.vimrc` sets this too).

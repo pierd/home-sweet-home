@@ -76,28 +76,9 @@ alias -g ....='../../..'
 alias -g .....='../../../..'
 
 # Git
-git_main_branch() {
-    local ref
-    for ref in refs/{heads,remotes/{origin,upstream}}/{main,trunk,master}; do
-        if git show-ref -q --verify $ref; then
-            echo ${ref:t}
-            return
-        fi
-    done
-    echo master
-}
-alias g='git'
-alias ga='git add'
-alias gb='git branch'
-alias gbd='git branch --delete'
-alias gc='git commit --verbose'
-alias gcmsg='git commit --message'
-alias gco='git checkout'
-alias gd='git diff'
-alias gl='git pull'
-alias gmom='git merge origin/$(git_main_branch)'
-alias gp='git push'
-alias gst='git status'
+if [[ -f ~/.git_aliases.sh ]]; then
+    source ~/.git_aliases.sh
+fi
 
 # Terminal title: current dir at the prompt, the command while it runs
 autoload -Uz add-zsh-hook
